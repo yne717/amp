@@ -103,15 +103,7 @@ func getTextTop() byte {
  * get exclusive or.
  */
 func getXor(b []byte) byte {
-	_b := b[1]
-
-	_b = _b ^ b[2]
-	_b = _b ^ b[3]
-	_b = _b ^ b[4]
-	_b = _b ^ b[5]
-	_b = _b ^ b[6]
-
-	return _b
+	return b[1] ^ b[2] ^ b[3] ^ b[4] ^ b[5] ^ b[6]
 }
 
 /**
