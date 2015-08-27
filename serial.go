@@ -1,0 +1,65 @@
+package main
+
+import (
+	"fmt"
+	"log"
+
+	"github.com/jacobsa/go-serial/serial"
+)
+
+func main() {
+	options := serial.OpenOptions{
+		PortName:        "/dev/ttyUSB0",
+		BaudRate:        9600,
+		DataBits:        8,
+		StopBits:        1,
+		MinimumReadSize: 4,
+	}
+
+	port, err := serial.Open(options)
+	if err != nil {
+		log.Fatalf("serial.Open: %v", err)
+	}
+	defer port.Close()
+
+	//音でかい[2 47 49 122 120 121 3 102]
+	// b := []byte{0x02, 0x2F, 0x31, 0x7A, 0x78, 0x79, 0x03, 0x66}
+	// b := []byte{0x02, 0x2F, 0x31, 0x7A, 0x78, 0x79, 0x03}
+
+	//アンプoff？[2 47 48 64 64 64 3 92]
+	// b := []byte{0x02, 0x2F, 0x30, 0x40, 0x40, 0x40, 0x03, 0x5c}
+	// b := []byte{0x02, 0x2F, 0x30, 0x40, 0x40, 0x40, 0x03}
+
+	//音最小
+	// b := []byte{0x02, 0x2F, 0x31, 0x41, 0x41, 0x41, 0x03, 0x5c}
+	// b := []byte{0x02, 0x2F, 0x31, 0x41, 0x41, 0x41, 0x03}
+
+	//音最小
+	// b := []byte{0x02, 0x2F, 0x31, 0x41, 0x41, 0x41, 0x03, 0x5c}
+	// b := []byte{0x02, 0x2F, 0x31, 0x57, 0x57, 0x57, 0x03}
+
+	b := []byte{0x02, 0x2F, 0x31, 0x61, 0x6B, 0x6B, 0x03}
+
+	xor := getXor(b)
+
+	b = append(b, xor)
+
+	n, err := port.Write(b)
+	if err != nil {
+		log.Fatalf("port.Write: %v", err)
+	}
+
+	fmt.Println("Wrote", n, "bytes.")
+}
+
+func getXor(b []byte) byte {
+	_b := b[1]
+
+	_b = _b ^ b[2]
+	_b = _b ^ b[3]
+	_b = _b ^ b[4]
+	_b = _b ^ b[5]
+	_b = _b ^ b[6]
+
+	return _b
+}
