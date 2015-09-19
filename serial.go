@@ -49,6 +49,9 @@ func main() {
 
 	data = append(data, getXor(data))
 
+	fmt.Print(data)
+	fmt.Print("\n")
+
 	n, err := port.Write(data)
 	if err != nil {
 		log.Fatalf("port.Write: %v", err)

@@ -2,10 +2,12 @@ package main
 
 import (
 	"flag"
-	"fmt"
+	"io"
 	"log"
+	"os"
+  "fmt"
 
-	"github.com/yne717/gousb/usb"
+  "github.com/stvnrhodes/goftdi"
 )
 
 var (
@@ -25,41 +27,18 @@ var (
 	Config   = flag.Int("config", 1, "Endpoint to which to connect")
 	Iface    = flag.Int("interface", 0, "Endpoint to which to connect")
 	Setup    = flag.Int("setup", 0, "Endpoint to which to connect")
-	Endpoint = flag.Int("endpoint", 2, "Endpoint to which to connect")
+	Endpoint = flag.Int("endpoint", 1, "Endpoint to which to connect")
 	Debug    = flag.Int("debug", 3, "Debug level for libusb")
 )
 
 func main() {
 	flag.Parse()
 
-	ctx := usb.NewContext()
-	defer ctx.Close()
-
-	ctx.Debug(*Debug)
-
-	devs, err := ctx.ListDevices(func(desc *usb.Descriptor) bool {
-		if fmt.Sprintf("%s:%s", desc.Vendor, desc.Product) != *Device {
-			return false
-		}
-
-		return true
-	})
-
-	defer func() {
-		for _, dev := range devs {
-			dev.Close()
-		}
-	}()
-
+	cfg := ftdi.Config{Vendor: 0x0403, Product: 0x6001, Baud: 9600}
+	c, err := ftdi.Open(cfg)
 	if err != nil {
-		log.Fatalf("usb.Open: %v", err)
+		log.Fatalf("open device faild: %s", err)
 	}
-
-	if len(devs) == 0 {
-		log.Fatal("not device.")
-	}
-
-	dev := devs[0]
 
 	powerData := getPowerData()
 	musicMicData := getMusicMicData()
@@ -75,55 +54,17 @@ func main() {
 		getEtx(),
 	}
 
-	data = append(data, getXor(data))
+	go io.Copy(c, os.Stdin)
+	io.Copy(os.Stdout, c)
 
-	// var rType uint8 = 0x80
-	// var request uint8 = 0x0a
-	// var val uint16 = 0
-	// var idx uint16 = 0
-	//
-	// /**
-	//  * transfer
-	//  */
-	// code, err := dev.Control(rType, request, val, idx, data)
+  fmt.Print(data)
+
+	// r, err := c.Write(data)
 	// if err != nil {
-	// 	log.Fatalf("control faild: %v", err)
+	// 	log.Fatalf("writte device faild: %s", err)
 	// }
 
-	ep, err := dev.OpenEndpoint(uint8(*Config), uint8(*Iface), uint8(*Setup), uint8(2)|uint8(usb.ENDPOINT_DIR_OUT))
-	if err != nil {
-		log.Fatalf("open device faild: %s", err)
-	}
-
-	len, err := ep.Write([]byte{0x00})
-	if err != nil {
-		log.Fatalf("control faild: %v", err)
-	}
-
-	len, err = ep.Write(data)
-	if err != nil {
-		log.Fatalf("control faild: %v", err)
-	}
-
-	// ep, err = dev.OpenEndpoint(uint8(*Config), uint8(*Iface), uint8(*Setup), uint8(1)|uint8(usb.ENDPOINT_DIR_IN))
-	// if err != nil {
-	// 	log.Fatalf("open device faild: %s", err)
-	// }
-	//
-	// len, err = ep.Read([]byte{0x00})
-	// if err != nil {
-	// 	log.Fatalf("control faild: %v", err)
-	// }
-	//
-	// len, err = ep.Read(data)
-	// if err != nil {
-	// 	log.Fatalf("control faild: %v", err)
-	// }
-
-	fmt.Print("len: ")
-	fmt.Print(len)
-	fmt.Print("\n")
-
+	// fmt.Print(r)
 }
 
 /**
