@@ -10,23 +10,11 @@ import (
 
 var (
 	Device = flag.String("device", "0403:6001", "select device. default \"0403:6001\" ")
-
-	/**
-	 * amp param
-	 */
-	Power = flag.String("power", "on", "amp power. on or off")
-	Music = flag.Int("music", -20, "music volume. -62 ~ 0")
-	Mic   = flag.Int("mic", -20, "mic volume. -62 ~ 0")
-	Echo  = flag.Int("echo", 20, "echo volume. 0 ~ 63")
-
-	/**
-	 * open device
-	 */
-	Config   = flag.Int("config", 1, "Endpoint to which to connect")
-	Iface    = flag.Int("interface", 0, "Endpoint to which to connect")
-	Setup    = flag.Int("setup", 0, "Endpoint to which to connect")
-	Endpoint = flag.Int("endpoint", 2, "Endpoint to which to connect")
-	Debug    = flag.Int("debug", 3, "Debug level for libusb")
+	Power  = flag.String("power", "on", "amp power. on or off")
+	Music  = flag.Int("music", -20, "music volume. -62 ~ 0")
+	Mic    = flag.Int("mic", -20, "mic volume. -62 ~ 0")
+	Echo   = flag.Int("echo", 20, "echo volume. 0 ~ 63")
+	Debug  = flag.Int("debug", 3, "Debug level for libusb")
 )
 
 func main() {
@@ -77,53 +65,17 @@ func main() {
 
 	data = append(data, getXor(data))
 
-	// var rType uint8 = 0x80
-	// var request uint8 = 0x0a
-	// var val uint16 = 0
-	// var idx uint16 = 0
-	//
-	// /**
-	//  * transfer
-	//  */
-	// code, err := dev.Control(rType, request, val, idx, data)
-	// if err != nil {
-	// 	log.Fatalf("control faild: %v", err)
-	// }
-
-	ep, err := dev.OpenEndpoint(uint8(*Config), uint8(*Iface), uint8(*Setup), uint8(2)|uint8(usb.ENDPOINT_DIR_OUT))
+	ep, err := dev.OpenEndpoint(uint8(1), uint8(0), uint8(0), uint8(2)|uint8(usb.ENDPOINT_DIR_OUT))
 	if err != nil {
 		log.Fatalf("open device faild: %s", err)
 	}
 
-	len, err := ep.Write([]byte{0x00})
+	len, err := ep.Write(data)
 	if err != nil {
 		log.Fatalf("control faild: %v", err)
 	}
 
-	len, err = ep.Write(data)
-	if err != nil {
-		log.Fatalf("control faild: %v", err)
-	}
-
-	// ep, err = dev.OpenEndpoint(uint8(*Config), uint8(*Iface), uint8(*Setup), uint8(1)|uint8(usb.ENDPOINT_DIR_IN))
-	// if err != nil {
-	// 	log.Fatalf("open device faild: %s", err)
-	// }
-	//
-	// len, err = ep.Read([]byte{0x00})
-	// if err != nil {
-	// 	log.Fatalf("control faild: %v", err)
-	// }
-	//
-	// len, err = ep.Read(data)
-	// if err != nil {
-	// 	log.Fatalf("control faild: %v", err)
-	// }
-
-	fmt.Print("len: ")
-	fmt.Print(len)
-	fmt.Print("\n")
-
+	fmt.Printf("wrote %vbyte\n", len)
 }
 
 /**
