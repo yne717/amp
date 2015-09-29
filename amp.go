@@ -2,42 +2,51 @@ package main
 
 import (
 	"flag"
-	"io"
+	"fmt"
 	"log"
-	"os"
-  "fmt"
 
-  "github.com/stvnrhodes/goftdi"
+	"github.com/yne717/gousb/usb"
 )
 
 var (
 	Device = flag.String("device", "0403:6001", "select device. default \"0403:6001\" ")
-
-	/**
-	 * amp param
-	 */
-	Power = flag.String("power", "on", "amp power. on or off")
-	Music = flag.Int("music", -20, "music volume. -62 ~ 0")
-	Mic   = flag.Int("mic", -20, "mic volume. -62 ~ 0")
-	Echo  = flag.Int("echo", 20, "echo volume. 0 ~ 63")
-
-	/**
-	 * open device
-	 */
-	Config   = flag.Int("config", 1, "Endpoint to which to connect")
-	Iface    = flag.Int("interface", 0, "Endpoint to which to connect")
-	Setup    = flag.Int("setup", 0, "Endpoint to which to connect")
-	Endpoint = flag.Int("endpoint", 1, "Endpoint to which to connect")
-	Debug    = flag.Int("debug", 3, "Debug level for libusb")
+	Power  = flag.String("power", "on", "amp power. on or off")
+	Music  = flag.Int("music", -20, "music volume. -62 ~ 0")
+	Mic    = flag.Int("mic", -20, "mic volume. -62 ~ 0")
+	Echo   = flag.Int("echo", 20, "echo volume. 0 ~ 63")
+	Debug  = flag.Int("debug", 3, "Debug level for libusb")
 )
 
 func main() {
 	flag.Parse()
 
-	cfg := ftdi.Config{Vendor: 0x0403, Product: 0x6001, Baud: 9600}
-	c, err := ftdi.Open(cfg)
+	ctx := usb.NewContext()
+	// defer func () {
+	// 	ctx.Close()
+	// }()
+
+	ctx.Debug(*Debug)
+
+	devs, err := ctx.ListDevices(func(desc *usb.Descriptor) bool {
+		if fmt.Sprintf("%s:%s", desc.Vendor, desc.Product) != *Device {
+			return false
+		}
+
+		return true
+	})
+
+	// defer func() {
+	// 	for _, dev := range devs {
+	// 		dev.Close()
+	// 	}
+	// }()
+
 	if err != nil {
-		log.Fatalf("open device faild: %s", err)
+		log.Fatalf("usb.Open: %v", err)
+	}
+
+	if len(devs) == 0 {
+		log.Fatal("not device.")
 	}
 
 	powerData := getPowerData()
@@ -54,17 +63,20 @@ func main() {
 		getEtx(),
 	}
 
-	go io.Copy(c, os.Stdin)
-	io.Copy(os.Stdout, c)
+	data = append(data, getXor(data))
 
-  fmt.Print(data)
+	ep, err := devs[0].OpenEndpoint(uint8(1), uint8(0), uint8(0), uint8(2)|uint8(usb.ENDPOINT_DIR_OUT))
+	if err != nil {
+		log.Fatalf("open device faild: %s", err)
+	}
 
-	// r, err := c.Write(data)
-	// if err != nil {
-	// 	log.Fatalf("writte device faild: %s", err)
-	// }
+	_, err = ep.Write(data)
+	if err != nil {
+		log.Fatalf("control faild: %v", err)
+	}
 
-	// fmt.Print(r)
+	devs[0].Close()
+	ctx.Close()
 }
 
 /**

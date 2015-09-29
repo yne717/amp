@@ -1,0 +1,2 @@
+gom "github.com/yne717/gousb/usb"
+gom "github.com/jacobsa/go-serial/serial"
