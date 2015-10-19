@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -61,10 +62,29 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// log.Printf("%q", buf[:n])
-	fmt.Printf("%v\n", buf)
+	fmt.Println(getResJson(buf))
 
 	s.Close()
+}
+
+func getResJson(buf []byte) string {
+
+	type Res struct {
+		Temp byte `json:"temp"`
+		Flag byte `json:"flag"`
+	}
+
+	/**
+	 * 各項目の整理、抜き取りをしないといけない
+	 */
+	res := Res{buf[4], buf[5]}
+
+	bytes, err := json.Marshal(res)
+	if err != nil {
+		log.Fatal("faild make json.")
+	}
+
+	return string(bytes)
 }
 
 /**
