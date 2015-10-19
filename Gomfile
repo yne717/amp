@@ -1,2 +1,3 @@
 gom "github.com/yne717/gousb/usb"
+gom "github.com/tarm/serial"
 gom "github.com/jacobsa/go-serial/serial"

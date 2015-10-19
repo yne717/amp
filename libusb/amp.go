@@ -9,12 +9,16 @@ import (
 )
 
 var (
-	Device = flag.String("device", "0403:6001", "select device. default \"0403:6001\" ")
-	Power  = flag.String("power", "on", "amp power. on or off")
-	Music  = flag.Int("music", -20, "music volume. -62 ~ 0")
-	Mic    = flag.Int("mic", -20, "mic volume. -62 ~ 0")
-	Echo   = flag.Int("echo", 20, "echo volume. 0 ~ 63")
-	Debug  = flag.Int("debug", 3, "Debug level for libusb")
+	Device    = flag.String("device", "0403:6001", "select device. default \"0403:6001\" ")
+	Config    = flag.Int("config", 1, "config number.")
+	Interface = flag.Int("interface", 0, "interface number.")
+	Setup     = flag.Int("setup", 0, "setup number.")
+	Ep        = flag.Int("ep", 2, "endpoint number.")
+	Power     = flag.String("power", "on", "amp power. on or off")
+	Music     = flag.Int("music", -20, "music volume. -62 ~ 0")
+	Mic       = flag.Int("mic", -20, "mic volume. -62 ~ 0")
+	Echo      = flag.Int("echo", 20, "echo volume. 0 ~ 63")
+	Debug     = flag.Int("debug", 3, "Debug level for libusb")
 )
 
 func main() {
@@ -34,7 +38,6 @@ func main() {
 
 		return true
 	})
-
 	// defer func() {
 	// 	for _, dev := range devs {
 	// 		dev.Close()
@@ -65,7 +68,7 @@ func main() {
 
 	data = append(data, getXor(data))
 
-	ep, err := devs[0].OpenEndpoint(uint8(1), uint8(0), uint8(0), uint8(2)|uint8(usb.ENDPOINT_DIR_OUT))
+	ep, err := devs[0].OpenEndpoint(uint8(*Config), uint8(*Interface), uint8(*Setup), uint8(*Ep)|uint8(usb.ENDPOINT_DIR_OUT))
 	if err != nil {
 		log.Fatalf("open device faild: %s", err)
 	}
