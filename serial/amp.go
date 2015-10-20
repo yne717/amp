@@ -25,7 +25,7 @@ func main() {
 	c := &serial.Config{
 		Name:        *Device,
 		Baud:        *Baud,
-		ReadTimeout: time.Second * 2,
+		ReadTimeout: time.Second * 1,
 	}
 
 	s, err := serial.OpenPort(c)
@@ -54,13 +54,15 @@ func main() {
 		log.Fatal(err)
 	}
 
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 
 	buf := make([]byte, 8)
 	_, err = s.Read(buf)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	time.Sleep(100 * time.Millisecond)
 
 	fmt.Println(getResJson(buf))
 
